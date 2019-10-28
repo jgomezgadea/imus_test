@@ -1,0 +1,8 @@
+float32 init_pose
+float32 final_pose
+float32 increment_pose
+float32 velocity_angular
+int16 repetition
+---
+bool success
+string message

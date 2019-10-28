@@ -1,0 +1,5 @@
+int16 seconds
+---
+ArrayTestValue noise
+bool success
+string message

@@ -1,0 +1,13 @@
+string device_name
+string type_test
+float64 average_yaw
+float64 std_yaw
+float64 min_yaw
+float64 max_yaw
+float64 diff_yaw
+float64 min_temperature
+float64 max_temperature
+float64 average_temperature
+float64 std_temperature
+float64 imu_value
+float64 temperature_value

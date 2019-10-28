@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<arg name="init_px_248" default="true"/>
+<arg name="init_px_cube" default="true"/>
+<arg name="init_myahrs" default="true"/>
+
+
+<group ns="px_2_4_8" if="$(arg init_px_248)">
+	<include file="$(find imus_test)/launch/IMUs/imu_px_248.launch"/>
+</group>
+
+<group ns="px_cube" if="$(arg init_px_cube)">
+	<include file="$(find imus_test)/launch/IMUs/imu_px_cube.launch"/>
+</group>
+
+<group ns="myahrs" if="$(arg init_myahrs)">
+	<include file="$(find imus_test)/launch/IMUs/imu_myahrs.launch"/>
+</group>
+
+
+
+</launch>

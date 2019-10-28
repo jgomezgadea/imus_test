@@ -1,0 +1,14 @@
+quaternion_to_euler_imus:
+-
+ name: px_2_4_8
+ topic : /px_2_4_8/imu/data/filter
+ publish : /px_2_4_8/yaw
+-
+ name: myahrs
+ topic : /myahrs/imu/data/filter
+ publish : /myahrs/yaw
+-
+ name: px_cube
+ topic : /px_cube/imu/data/filter
+ publish : /px_cube/yaw
+

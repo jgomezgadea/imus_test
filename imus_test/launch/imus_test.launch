@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<launch>
+    
+
+    <node name="dynamixel_manager" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
+        <rosparam file="$(find imus_test)/config/dynamixel_manager.yaml" command="load" />
+    </node>
+
+    <!-- Load controller configuration to parameter server -->
+    
+    <rosparam file="$(find imus_test)/config/dynamixel_controllers.yaml" command="load" />
+    
+    <!-- Start specified joint controllers -->
+    
+    <node name="dynamixel_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+          --port=arbotix_port
+          --type=simple
+          joint_1
+          joint_2
+
+          "
+          output="screen"/>
+    <node name="dynamixel_controller_spawner2" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+          --type=meta
+          arm_controller
+          joint_1
+          joint_2
+          
+          "
+          output="screen"/>
+
+
+	<!-- Start the Dynamixel Joint States Publisher -->
+
+	<node name="dynamixel_joint_states_publisher" pkg="widowx_arm_controller" type="dynamixel_joint_state_publisher.py" output="screen" >
+		<param name="rate" value="15"/>
+	</node>
+
+
+    <!-- Start IMUs -->
+
+    <include file="$(find imus_test)/launch/IMUs/imu_all.launch">
+        <arg name="init_px_248" value="true"/>
+        <arg name="init_px_cube" value="true"/>
+        <arg name="init_myahrs" value="true"/>
+    </include>
+
+
+    <!-- Start TFs -->
+
+    <include file="$(find imus_test)/launch/test/test_imu.launch">
+    </include>
+
+
+    <!-- Start quaternion to euler -->
+
+    <include file="$(find imus_test)/launch/test/quaternion_to_euler.launch">
+    </include>
+
+
+</launch>
+

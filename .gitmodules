@@ -1,0 +1,6 @@
+[submodule "myahrs_driver"]
+	path = myahrs_driver
+	url = https://github.com/robotpilot/myahrs_driver.git
+[submodule "widowx_arm"]
+	path = widowx_arm
+	url = https://github.com/robotnikautomation/widowx_arm

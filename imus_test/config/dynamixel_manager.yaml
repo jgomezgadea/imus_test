@@ -1,0 +1,5 @@
+namespace: dxl_manager
+serial_ports:
+  arbotix_port:
+    port_name: "/dev/ttyUSB_DYNAMIXEL"
+    baud_rate: 1000000

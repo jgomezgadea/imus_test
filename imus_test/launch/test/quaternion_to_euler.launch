@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+	<rosparam command="load" file="$(find imus_test)/config/quaternion_to_euler.yaml" />
+	<node pkg="imus_test" name="quaternion_to_euler_imus" type="quaternion_to_euler.py" output="screen"> 
+		
+	</node>
+</launch>

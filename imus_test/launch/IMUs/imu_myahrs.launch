@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+
+<launch>
+
+	<arg name="port" default="/dev/ttyACM_myAhrs" />
+
+	<node name="myahrs_driver" pkg="myahrs_driver" type="myahrs_driver">
+			<param name="port" value="$(arg port)"/>
+			<remap from="imu/data" to="imu/data/not_filter"/>
+	</node>
+
+	<node name="imu_complementary_filter_myAhrs" pkg="imu_complementary_filter" type="complementary_filter_node">
+			<remap from="imu/data/not_filter" to="imu/data_raw"/>
+			<remap from="imu/data" to="imu/data/filter"/>
+			<param name="publish_tf" value="false"/>
+			<param name="publish_debug_topics" value="true"/>
+			<param name="do_bias_estimation" value="false"/>
+			<param name="do_adaptive_gain" value="true"/>
+	</node>
+
+</launch>
