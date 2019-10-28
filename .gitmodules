@@ -4,3 +4,6 @@
 [submodule "widowx_arm"]
 	path = widowx_arm
 	url = https://github.com/robotnikautomation/widowx_arm
+[submodule "phidgets_drivers"]
+	path = phidgets_drivers
+	url = https://github.com/ros-drivers/phidgets_drivers.git

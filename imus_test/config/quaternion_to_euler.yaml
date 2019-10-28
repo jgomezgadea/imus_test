@@ -11,4 +11,11 @@ quaternion_to_euler_imus:
  name: px_cube
  topic : /px_cube/imu/data/filter
  publish : /px_cube/yaw
-
+-
+ name: phidgets
+ topic : /phidgets/imu/data/filter
+ publish : /phidgets/yaw
+-
+ name: phidgets_other_filter
+ topic : /phidgets/imu/data/other_filter
+ publish : /phidgets/other_yaw

@@ -7,7 +7,7 @@
     <node if="$(arg simulation)" pkg="tf" type="static_transform_publisher" name="fcu_static_tf_publisher" args="0 0 0 0 0 0 1 local_origin_ned fcu 100" />
     <rosparam command="load" file="$(find imus_test)/config/imus_test.yaml" />
 
-    <node pkg = "imus_test" type="imus_test.py" name="imus_test" output="screen">
+    <node pkg="imus_test" type="imus_test.py" name="imus_test" output="screen">
     </node>
 
 </launch>
