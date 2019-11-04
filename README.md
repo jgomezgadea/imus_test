@@ -27,7 +27,7 @@ Starts dynamixel motors and all IMU with the same orientation to check IMU's ent
 * /phidgets/other_yaw (std_msgs/Float64)
   Orientation of the IMU with an applied filter (rad)
 
-* /phidgets/other_yaw (std_msgs/Float64)
+* /vectornav/yaw (std_msgs/Float64)
   Orientation of the IMU with an applied filter (rad)
 
 * /arm_controller/state/actual/positions[0] (control_msgs/FollowJointTrajectoryFeedback)

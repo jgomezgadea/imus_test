@@ -6,6 +6,7 @@
 	<arg name="init_px_cube" default="true"/>
 	<arg name="init_myahrs" default="true"/>
 	<arg name="init_phidgets" default="true"/>
+	<arg name="init_vectornav" default="true"/>
 
 
 	<group ns="px_2_4_8" if="$(arg init_px_248)">
@@ -22,6 +23,10 @@
 
 	<group ns="phidgets" if="$(arg init_phidgets)">
 		<include file="$(find imus_test)/launch/IMUs/imu_phidgets.launch"/>
+	</group>
+
+	<group if="$(arg init_vectornav)">
+		<include file="$(find imus_test)/launch/IMUs/imu_vectornav.launch"/>
 	</group>
 
 </launch>

@@ -7,3 +7,6 @@
 [submodule "phidgets_drivers"]
 	path = phidgets_drivers
 	url = https://github.com/ros-drivers/phidgets_drivers.git
+[submodule "vectornav"]
+	path = vectornav
+	url = https://github.com/RobotnikAutomation/vectornav.git

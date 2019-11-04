@@ -46,6 +46,7 @@
         <arg name="init_px_cube" value="true"/>
         <arg name="init_myahrs" value="true"/>
         <arg name="init_phidgets" value="true"/>
+        <arg name="init_vectornav" value="true"/>
     </include>
 
 
