@@ -26,18 +26,19 @@ import copy
 
 
 class ImuData:
-    def __init__(self, name_imu, topic_imu_yaw, topic_imu_temperature="not_temperature", is_the_temperature_message_float_64=False, calibrate_service=None):
+    def __init__(self, name_imu, topic_imu_yaw, topic_imu_temperature="not_temperature", is_the_temperature_message_float_64=False, calibration_service="", type_calibration_srv=""):
         print("Imu " + name_imu + " added")
         self.name = name_imu
         self.topic_imu_yaw = topic_imu_yaw
         self.topic_imu_temperature = topic_imu_temperature
         self.is_the_temperature_message_float_64 = is_the_temperature_message_float_64
-        self.calibrate_service = calibrate_service
-        self.has_calibration = calibrate_service != None
         self.data_imu = []
         self.data_temperature = []
         self.read = False
         self.reference_yaw = 0
+        self.service_proxy_calibration = None
+        self.service_calibration_srv = None
+
         self.yaw_sub = rospy.Subscriber(
             self.topic_imu_yaw, Float64, self.imuYawCallBack)
         self.yaw_sub = None
@@ -47,6 +48,33 @@ class ImuData:
         else:
             rospy.Subscriber(self.topic_imu_temperature, Temperature,
                              self.imuTemperatureCallBack)
+        self.calibration_service = calibration_service
+        self.type_calibration_srv = type_calibration_srv
+        self.has_calibration_service = False
+        if(self.calibration_service != "" and self.type_calibration_srv):
+            self.has_calibration_service = True
+            try:
+                message_pkg = self.type_calibration_srv.split('/')[0]
+                self.type_calibration_srv = self.type_calibration_srv.split(
+                    '/')[1]
+                import_calibration = "from " + message_pkg + ".srv import " + \
+                    self.type_calibration_srv + ","+self.type_calibration_srv+"Request"
+
+                exec(import_calibration)
+
+                create_proxy_calibration_service = "self.service_proxy_calibration = rospy.ServiceProxy(self.calibration_service," + \
+                    self.type_calibration_srv + ")"
+                exec(create_proxy_calibration_service)
+                exec("self.service_calibration_srv = " +
+                     self.type_calibration_srv+"Request()")
+                print(
+                    self.name + " - Added calibration")
+            except Exception, e:
+                rospy.logerr(
+                    self.name + " - Error to try add the calibration service: " + str(e))
+                self.has_calibration_service = False
+                self.calibration_service = ""
+                self.type_calibration_srv = ""
 
     def imuYawCallBack(self, data):
         if self.read:
@@ -55,7 +83,7 @@ class ImuData:
     def imuTemperatureCallBack(self, data):
         if self.read:
             if(self.is_the_temperature_message_float_64):
-                self.data_temperature.append(data)
+                self.data_temperature.append(data.data)
             else:
                 self.data_temperature.append(data.temperature)
 
@@ -65,10 +93,14 @@ class ImuData:
         self.data_temperature = []
 
     def getLastValue(self):
-        if(len(self.data_temperature) <= 0):
-            return {"yaw": self.data_imu[len(self.data_imu)-1], "temperature": 0.0}
-        else:
-            return {"yaw": self.data_imu[len(self.data_imu)-1], "temperature": self.data_temperature[len(self.data_temperature)-1]}
+        try:
+            if(len(self.data_temperature) <= 0):
+                return {"yaw": self.data_imu[len(self.data_imu)-1], "temperature": 0.0}
+            else:
+                return {"yaw": self.data_imu[len(self.data_imu)-1], "temperature": self.data_temperature[len(self.data_temperature)-1]}
+        except Exception, e:
+            print(self.name + " - Error in the index: " + str(e))
+            return {"yaw": 0.0, "temperature": 0.0}
 
     def startRead(self):
         self.read = True
@@ -104,6 +136,20 @@ class ImuData:
     def getReferenceYaw(self):
         return self.reference_yaw
 
+    def calibrate(self):
+        print "The imu call " + self.name + " has a calibration " + str(self.has_calibration_service)
+        if(self.has_calibration_service):
+            rospy.wait_for_service(self.calibration_service)
+            try:
+                self.service_proxy_calibration(
+                    self.service_calibration_srv)
+                print "%s - Send to calibrate", self.name
+                return True
+            except Exception, e:
+                print self.name + " exception to call calibrate : " + str(e)
+                return False
+        return True
+
 
 class Test():
     def __init__(self):
@@ -130,10 +176,15 @@ class Test():
         self.test_noise_srv = None
         self.change_motor = False
         self.change_value_motor = False
+        self.seconds_need_to_calibrate_before_test = 60
 
     def readParameters(self):
         if rospy.has_param('imus_test'):
             params = rospy.get_param('imus_test')
+            if "test_params" in params:
+                if "seconds_need_to_calibrate_before_test" in params["test_params"]:
+                    self.seconds_need_to_calibrate_before_test = params[
+                        "test_params"]["seconds_need_to_calibrate_before_test"]
             if "imus" in params:
                 imus_param = params["imus"]
                 print(imus_param)
@@ -141,15 +192,18 @@ class Test():
                     topic_temperature = "not_temperature"
                     if "topic_imu_temperature" in imu_param:
                         topic_temperature = imu_param["topic_imu_temperature"]
-                    calibrate_service = None
-                    if "calibrate_service" in imu_param:
-                        calibrate_service = imu_param["calibrate_service"]
+                    service_calibrate = ""
+                    if "service_calibrate" in imu_param:
+                        service_calibrate = imu_param["service_calibrate"]
+                    type_calibrate_srv = ""
+                    if "type_calibrate_srv" in imu_param:
+                        type_calibrate_srv = imu_param["type_calibrate_srv"]
                     is_the_temperature_message_float_64 = False
                     if "is_the_temperature_message_float_64" in imu_param:
                         is_the_temperature_message_float_64 = imu_param[
                             "is_the_temperature_message_float_64"]
                     self.imus[imu_param["name"]] = ImuData(
-                        imu_param["name"], imu_param["topic_imu_yaw"], topic_temperature, is_the_temperature_message_float_64, calibrate_service)
+                        imu_param["name"], imu_param["topic_imu_yaw"], topic_temperature, is_the_temperature_message_float_64, service_calibrate, type_calibrate_srv)
 
             if "arm" in params:
                 arm = params["arm"]
@@ -167,6 +221,8 @@ class Test():
             self.joint_base_state, JointState, self.callBackBaseState)
         self.service_noise_test = rospy.Service(
             'noise_test', NoiseTest, self.testNoiseService)
+        self.service_noise_test = rospy.Service(
+            'calibrate_all_imus', NoiseTest, self.calibrate_all_imus)
         self.service_move_test = rospy.Service(
             'move_test', MoveTest, self.testMoveService)
         self.pub_moving_test_data = rospy.Publisher(
@@ -267,8 +323,26 @@ class Test():
         response.success = True
         return response
 
+    def calibrate_all_imus(self, req):
+
+        response = NoiseTestResponse()
+        if (self.currentState != self.STATE_IDLE):
+            print("Current state: ") + str(self.currentState)
+            response.success = False
+            response.message = "The node is bussy, with other test"
+            return response
+        self.currentState = self.STATE_TEST_NOISE
+        if(self.call_calibrations(req.seconds)):
+            response.success = True
+        else:
+            response.message = "Problem to try calibrate the Imus"
+            response.success = False
+        self.currentState = self.STATE_IDLE
+        return response
+
     def testNoise(self, seconds):
         self.startArm()
+        self.call_calibrations(self.seconds_need_to_calibrate_before_test)
         for key_imu in self.imus:
             self.imus[key_imu].clearData()
             self.imus[key_imu].startRead()
@@ -295,6 +369,7 @@ class Test():
         while(self.arm_moving == True):
             print("Moving to position")
             rospy.sleep(0.05)
+        self.call_calibrations(self.seconds_need_to_calibrate_before_test)
         velocity_motor = self.setMotorVelocity(req.velocity_angular)
         if (velocity_motor == None):
             response.success = False
@@ -322,10 +397,10 @@ class Test():
                             "Repetition number " + str(x) + " to " + str(req.repetition))
                         self.change_value_motor = False
                     # rospy.sleep(0.01)
-                for w in range(1, 20):  # 3 seconds
+                for w in range(1, 50):  # 5 seconds
                     self.send_stadists(
                         "Repetition number " + str(x) + " to " + str(req.repetition) + ", in stop")
-                    rospy.sleep(0.15)
+                    rospy.sleep(0.1)
 
         for key_imu in self.imus:
             self.imus[key_imu].clearData()
@@ -353,6 +428,19 @@ class Test():
 
             stadists.values.append(aux)
         self.pubDataTestMoving(stadists)
+
+    def call_calibrations(self, seconds):
+        print("Calibration")
+        time_in_execution = 0
+        for key_imu in self.imus:
+            if(not self.imus[key_imu].calibrate()):
+                return False
+        while time_in_execution != seconds:
+            print("Calibration seconds:" +
+                  str(time_in_execution) + "/" + str(seconds))
+            rospy.sleep(1)
+            time_in_execution = time_in_execution + 1
+        return True
 
 
 if __name__ == '__main__':

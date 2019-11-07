@@ -10,3 +10,6 @@
 [submodule "vectornav"]
 	path = vectornav
 	url = https://github.com/RobotnikAutomation/vectornav.git
+[submodule "robot_localization_utils"]
+	path = robot_localization_utils
+	url = https://github.com/RobotnikAutomation/robot_localization_utils.git
