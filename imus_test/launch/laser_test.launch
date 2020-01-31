@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<launch>
+	
+	<arg name="prefix" default=""/>
+	<arg name="fixed_frame" default="$(arg prefix)odom"/>
+	<arg name="robot_base_frame" default="$(arg prefix)laser_link"/>
+	<!-- ar -->
+	<arg name="marker_size" default="0.12" />
+	<arg name="max_new_marker_error" default="0.0008" />
+	<arg name="max_track_error" default="0.002" />
+	<arg name="cam_image_topic" default="front_rgbd_camera/rgb/image_raw" />
+	<arg name="cam_info_topic" default="front_rgbd_camera/rgb/camera_info" />
+	<arg name="object_frame" default="$(arg prefix)noisy_marker"/>
+
+	<!-- laser -->
+	<arg name="laser_dock_middle_frame" default="$(arg prefix)docking_station_laser"/>
+	<arg name="laser_filtered_dock_frame" default="$(arg prefix)filtered_docking_station_laser"/>
+	<arg name="laser_filtered_contact_dock_frame" default="$(arg prefix)docking_station_laser_contact"/>
+	<arg name="config_laser_reflectors_filter" default="$(find laser_test)/config/laser_filter_reflectors.yaml"/>
+    <arg name="source_topic" default="urg_node/scan" />
+	<arg name="target_topic" default="urg_node/cloud_reflector" />
+
+    <node name="tf_publisher_odom2laser" pkg="tf" type="static_transform_publisher" args="5.0 0 0 0 0 0 $(arg fixed_frame) laser_link 100" />
+
+    <node name="dynamixel_manager" pkg="dynamixel_controllers" type="controller_manager.py" required="true" output="screen">
+        <rosparam file="$(find imus_test)/config/dynamixel_manager.yaml" command="load" />
+    </node>
+
+    <!-- Load controller configuration to parameter server -->
+    
+    <rosparam file="$(find imus_test)/config/dynamixel_controllers.yaml" command="load" />
+    
+    <!-- Start specified joint controllers -->
+    
+    <node name="dynamixel_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+          --port=arbotix_port
+          --type=simple
+          joint_1
+          joint_2
+
+          "
+          output="screen"/>
+    <node name="dynamixel_controller_spawner2" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+          --type=meta
+          arm_controller
+          joint_1
+          joint_2
+          
+          "
+          output="screen"/>
+
+
+	<!-- Start the Dynamixel Joint States Publisher -->
+
+	<node name="dynamixel_joint_states_publisher" pkg="widowx_arm_controller" type="dynamixel_joint_state_publisher.py" output="screen" >
+		<param name="rate" value="15"/>
+	</node>
+
+
+    <!-- Start laser -->
+
+    <include file="$(find imus_test)/launch/hokuyo_ust.launch">
+    </include>
+
+    <!-- Create frame -->
+    <node pkg="laser_filters" type="scan_to_cloud_filter_chain" name="scan_to_cloud_filter_reflector">
+        <rosparam command="load" file="$(arg config_laser_reflectors_filter)"/>
+        <param name="high_fidelity" value="true"/>
+        <param name="incident_angle_correction" value="false"/>
+        <param name="target_frame"  value="$(arg robot_base_frame)"/>
+        <remap from="scan" to="$(arg source_topic)"/>
+        <remap from="cloud_filtered" to="$(arg target_topic)"/>
+    </node>
+    
+    <node pkg="robotnik_locator" type="two_tag_laser_locator_node" name="two_tag_laser_locator_node">
+        <param name="robot_base_frame" value="$(arg robot_base_frame)"/>
+        <param name="fixed_frame" value="$(arg fixed_frame)" />
+        <param name="object_frame" value="$(arg laser_dock_middle_frame)"/>
+        <param name="scan_topic_name" value="$(arg target_topic)" />
+        <param name="min_num_cluster" type="int" value="10"/>
+        <param name="max_num_cluser" type="int" value="50"/>
+        <param name="cluster_tolerance" value="0.05"/>
+        <param name="tag_distance" value="0.355"/>
+        <param name="tag_distance_margin" value="0.1"/>
+        <param name="distance_detection" value="3.5"/>
+        <param name="desired_freq" value="40.0"/>  
+        <param name="filter_object_by_orientation" value="false"/>  
+    </node>
+    
+    <node name="tf_laser_dock_pose_filter" pkg="robotnik_pose_filter" type="tf_pose_filter_node" respawn="false">
+        <param name="filter_position_sensitivity"       type="double" value="0.8" />
+        <param name="filter_orientation_sensitivity"    type="double" value="0.2" />
+        <param name="source_frame" type="string" value="$(arg fixed_frame)" />
+        <param name="target_frame" type="string" value="$(arg laser_dock_middle_frame)" />
+        <param name="filtered_source_frame" type="string" value="$(arg fixed_frame)" />
+        <param name="filtered_target_frame" type="string" value="$(arg laser_filtered_dock_frame)" />
+        <param name="two_d_mode" type="bool" value="false" />
+        <rosparam param="apply_transform">[0.0, 0.0, 0.0, 0.0, 0.0, 1.5707]</rosparam>
+        <!-- if not set, does not apply a transform. transform is xyz-rpy, 6 parameters. remember that rotation is applied in reverse order (ypr) -->
+    </node>
+    
+    <!--node name="tf_publisher_laser2contact" pkg="tf" type="static_transform_publisher" args="-0.25 0.0 0 0 0 0 $(arg laser_filtered_dock_frame) $(arg laser_filtered_contact_dock_frame) 100" /-->
+
+    <!-- Start program to calculate IMU precision -->
+    <!--include file="$(find laser_test)/launch/laser_test.launch">
+    </include-->
+
+</launch>
+

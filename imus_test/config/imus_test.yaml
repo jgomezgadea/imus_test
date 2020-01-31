@@ -1,32 +1,11 @@
 imus_test:
-  test_params:
-    seconds_need_to_calibrate_before_test: 60
   imus:
     - name: "px_248"
-      topic_imu_yaw: "/px_2_4_8/yaw_filter"
+      topic_imu_yaw: "/px_2_4_8/yaw"
       topic_imu_temperature: "/px_2_4_8/mavros/imu/temperature_imu"
       is_the_temperature_message_float_64: False
-      service_calibrate: "/px_2_4_8/calibrate_imu_gyro"
-      type_calibrate_srv: "std_srvs/Trigger"
     - name: "px_cube"
-      topic_imu_yaw: "/px_cube/yaw_filter"
+      topic_imu_yaw: "/px_cube/yaw"
       topic_imu_temperature: "/px_cube/mavros/imu/temperature_imu"
       is_the_temperature_message_float_64: False
-      service_calibrate: "/px_cube/calibrate_imu_gyro"
-      type_calibrate_srv: "std_srvs/Trigger"
-    - name: "myahrs"
-      topic_imu_yaw: "/myahrs/yaw_filter"
-      topic_imu_temperature: "/myahrs/imu/temperature"
-      is_the_temperature_message_float_64: True
-    - name: "phidgets"
-      topic_imu_yaw: "/phidgets/yaw_filter"
-      topic_imu_temperature: "/phidgets/temperature"
-      is_the_temperature_message_float_64: True
-      service_calibrate: "/phidgets/imu/calibrate"
-      type_calibrate_srv: "std_srvs/Empty"
-    - name: "vector"
-      topic_imu_yaw: "/vectornav/yaw_filter"
-      topic_imu_temperature: "/vectornav/imu/temperature"
-      is_the_temperature_message_float_64: False
-
-
+   

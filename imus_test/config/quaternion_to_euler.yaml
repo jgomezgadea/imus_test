@@ -36,11 +36,6 @@ quaternion_to_euler_imus:
  topic : /phidgets/imu/data/other_filter
  publish : /phidgets/other_yaw_filter
 -
- name: phidgets_raw
- topic : /phidgets/imu/data_raw
- publish : /phidgets/raw/yaw
--
  name: vectornav_filter
  topic : /vectornav/imu/data/filter
  publish : /vectornav/yaw_filter
-

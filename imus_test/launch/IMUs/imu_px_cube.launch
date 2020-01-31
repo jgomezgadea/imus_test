@@ -31,7 +31,4 @@
         <param name="do_bias_estimation" value="false"/>
         <param name="do_adaptive_gain" value="true"/>
     </node>
-    
-    <node pkg="robot_localization_utils" type="rl_utils" name="rl_utils_cube"/> 
-    
 </launch>
